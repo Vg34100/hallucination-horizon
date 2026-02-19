@@ -1,0 +1,7 @@
+.venv
+.env
+docs/history
+.explore.py
+data/runs
+*.png
+__pycache__
