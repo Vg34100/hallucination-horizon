@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from typing import Dict, Iterable, List, Tuple
+from typing import Dict, Iterable, List
 
 import networkx as nx
 
-Coord = Tuple[int, int]
+from core.types import Coord
 
 
 def build_graph(width: int, height: int, walls: Iterable[Coord]) -> nx.Graph:

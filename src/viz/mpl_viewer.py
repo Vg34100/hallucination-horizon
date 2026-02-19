@@ -1,6 +1,11 @@
 from __future__ import annotations
 
 import os
+import sys
+
+# Allow running as a script from repo root.
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 from dataclasses import dataclass
 from typing import List, Tuple
 
@@ -8,10 +13,11 @@ import matplotlib.pyplot as plt
 from matplotlib.widgets import Button, Slider, TextBox
 import numpy as np
 
-from agent_llm import LLMAgent, OllamaProvider
-from agent_baseline import Observation
-from env_grid import GridEnv, make_hard_maze, make_simple_maze
-from prompts import build_prompt, format_local_grid, format_observation
+from agents.llm_agent import LLMAgent, OllamaProvider
+from agents.base import Observation
+from core.env_grid import GridEnv
+from core.mazes import make_hard_maze, make_simple_maze
+from prompts.prompts import build_prompt, format_local_grid, format_observation
 
 
 Coord = Tuple[int, int]

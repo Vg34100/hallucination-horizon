@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+import os
+import sys
+
+# Allow running as a script from repo root.
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 import itertools
 import os
 import subprocess
@@ -7,7 +13,7 @@ import sys
 
 
 def run_case(history_steps: int, local_grid: bool, structured: bool) -> None:
-    cmd = [sys.executable, "src/run_experiment.py", "--max-steps", "60"]
+    cmd = [sys.executable, "src/runners/run_experiment.py", "--max-steps", "60"]
     if history_steps:
         cmd += ["--history-steps", str(history_steps)]
     if local_grid:

@@ -3,8 +3,9 @@ from __future__ import annotations
 import json
 import random
 import re
-import urllib.request
 from dataclasses import dataclass
+
+from agents.ollama_client import OllamaClient
 
 
 @dataclass
@@ -15,6 +16,7 @@ class LLMResponse:
 
 
 class OllamaProvider:
+    # Handles prompt construction + Ollama calls + response parsing.
     def __init__(
         self,
         base_url: str,
@@ -31,10 +33,12 @@ class OllamaProvider:
         self.timeout_s = timeout_s
         self.retries = retries
         self.num_ctx = 65536
+        self.client = OllamaClient(self.base_url)
 
     def generate(
         self, prompt: str, max_tokens: int = 80, temperature: float = 0.5
     ) -> str:
+        # Main LLM call (chat or generate). Returns raw text.
         if self.mode == "chat":
             options = {
                 "num_predict": max_tokens,
@@ -47,16 +51,10 @@ class OllamaProvider:
                 "options": options,
                 "stream": False,
             }
-            req = urllib.request.Request(
-                url=f"{self.base_url}/api/chat",
-                data=json.dumps(payload).encode("utf-8"),
-                headers={"Content-Type": "application/json"},
-            )
             data = None
             for _ in range(self.retries + 1):
                 try:
-                    with urllib.request.urlopen(req, timeout=self.timeout_s) as resp:
-                        data = json.loads(resp.read().decode("utf-8"))
+                    data = self.client.chat(payload, self.timeout_s)
                     break
                 except TimeoutError:
                     continue
@@ -87,16 +85,10 @@ class OllamaProvider:
             "format": fmt,
             "stream": False,
         }
-        req = urllib.request.Request(
-            url=f"{self.base_url}/api/generate",
-            data=json.dumps(payload).encode("utf-8"),
-            headers={"Content-Type": "application/json"},
-        )
         data = None
         for _ in range(self.retries + 1):
             try:
-                with urllib.request.urlopen(req, timeout=self.timeout_s) as resp:
-                    data = json.loads(resp.read().decode("utf-8"))
+                data = self.client.generate(payload, self.timeout_s)
                 break
             except TimeoutError:
                 continue
@@ -112,6 +104,7 @@ class LLMAgent:
         self.provider = provider
 
     def choose_action(self, obs, prompt: str) -> LLMResponse:
+        # Ask the model, then parse the final direction token.
         raw = self.provider.generate(prompt)
         parsed = ""
         if self.provider.structured_output:
@@ -128,6 +121,7 @@ class LLMAgent:
 
         fallback_used = False
         if not parsed:
+            # If model output is unusable, fall back to a valid random move.
             open_actions = [a for a, is_open in obs.open_map.items() if is_open]
             if open_actions:
                 parsed = random.choice(open_actions)

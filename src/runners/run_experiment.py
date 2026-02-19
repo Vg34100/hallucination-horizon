@@ -1,19 +1,28 @@
 from __future__ import annotations
 
+import os
+import sys
+
+# Allow running as a script from repo root.
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 import argparse
 import json
-import os
 import random
 from datetime import datetime
 from typing import Dict, List, Tuple
 
-from agent_baseline import AStarAgent, GreedyAgent, Observation, RandomAgent
-from agent_llm import LLMAgent, OllamaProvider
-from env_grid import GridEnv, make_hard_maze, make_simple_maze
-from metrics import MetricsState
-from planner_astar import all_pairs_shortest_lengths, astar_path
-from prompts import build_prompt, format_local_grid, format_observation
-from viz import plot_distance_curve, plot_heatmap, plot_trajectory
+from agents.astar_agent import AStarAgent
+from agents.greedy_agent import GreedyAgent
+from agents.observation import Observation
+from agents.random_agent import RandomAgent
+from agents.llm_agent import LLMAgent, OllamaProvider
+from core.env_grid import GridEnv
+from core.mazes import make_hard_maze, make_simple_maze
+from core.metrics import MetricsState
+from core.planner_astar import all_pairs_shortest_lengths, astar_path
+from prompts.prompts import build_prompt, format_local_grid, format_observation
+from viz.plots import plot_distance_curve, plot_heatmap, plot_trajectory
 
 Coord = Tuple[int, int]
 
@@ -29,7 +38,9 @@ def run_agent(
     local_grid_radius: int = 2,
     dynamic_walls: bool = False,
     flip_every: int = 0,
+    progress_every: int = 10,
 ) -> dict:
+    # Runs a single agent for one episode and writes logs/plots.
     shortest = all_pairs_shortest_lengths(env.width, env.height, env.walls)
     astar = astar_path(env.width, env.height, env.walls, env.start, env.goal)
 
@@ -141,6 +152,9 @@ def run_agent(
                 reached_goal = True
                 break
 
+            if progress_every and (step + 1) % progress_every == 0:
+                print(f"[{agent_name}] step {step+1}/{max_steps} pos={result.pos_after}")
+
     summary = {
         "agent": agent_name,
         "steps": metrics.steps,
@@ -195,6 +209,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Gridworld LLM diagnostics")
     parser.add_argument("--maze", type=str, default="simple", choices=["simple", "hard"])
     parser.add_argument("--max-steps", type=int, default=60)
+    parser.add_argument("--progress-every", type=int, default=10)
     parser.add_argument("--history-steps", type=int, default=0)
     parser.add_argument("--local-grid", action="store_true")
     parser.add_argument("--local-grid-radius", type=int, default=2)
@@ -205,11 +220,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--flip-every", type=int, default=0)
     parser.add_argument("--runs", type=int, default=1)
     parser.add_argument("--seed", type=int, default=None)
+    parser.add_argument("--config", type=str, default="")
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
+    # Pick maze and build base config.
     if args.maze == "hard":
         width, height, walls, start, goal = make_hard_maze()
     else:
@@ -225,6 +242,7 @@ def main() -> None:
         "goal": goal,
         "walls": walls,
         "max_steps": args.max_steps,
+        "progress_every": args.progress_every,
         "history_steps": args.history_steps,
         "local_grid": args.local_grid,
         "local_grid_radius": args.local_grid_radius,
@@ -239,6 +257,12 @@ def main() -> None:
         "ollama_model": os.environ.get("OLLAMA_MODEL", "llama3.2:3b"),
         "ollama_mode": os.environ.get("OLLAMA_MODE", "generate"),
     }
+
+    # Optional config file to override defaults
+    if args.config:
+        with open(args.config, "r", encoding="utf-8") as f:
+            file_cfg = json.load(f)
+        config.update(file_cfg)
 
     for run_idx in range(args.runs):
         run_id = base_run_id if args.runs == 1 else f"{base_run_id}_{run_idx+1}"
@@ -290,6 +314,7 @@ def main() -> None:
                 local_grid_radius=config["local_grid_radius"],
                 dynamic_walls=config["dynamic_walls"],
                 flip_every=config["flip_every"],
+                progress_every=config["progress_every"],
             )
             summaries.append(summary)
 

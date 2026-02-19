@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, Tuple
+from typing import Dict
 
-
-Coord = Tuple[int, int]
+from core.types import Coord
 
 
 @dataclass

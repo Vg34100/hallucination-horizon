@@ -1,9 +1,13 @@
 from __future__ import annotations
 
-import argparse
 import os
-import subprocess
 import sys
+
+# Allow running as a script from repo root.
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+import argparse
+import subprocess
 
 
 def parse_args() -> argparse.Namespace:
@@ -35,7 +39,7 @@ def main() -> None:
 
         cmd = [
             sys.executable,
-            "src/run_experiment.py",
+            "src/runners/run_experiment.py",
             "--max-steps",
             str(args.max_steps),
             "--runs",

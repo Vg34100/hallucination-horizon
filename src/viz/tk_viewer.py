@@ -1,7 +1,12 @@
 from __future__ import annotations
 
-import json
 import os
+import sys
+
+# Allow running as a script from repo root.
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+import json
 import queue
 import threading
 import urllib.request
@@ -11,10 +16,11 @@ from typing import List, Tuple
 import tkinter as tk
 from tkinter import ttk
 
-from agent_baseline import Observation
-from agent_llm import LLMAgent, OllamaProvider
-from env_grid import GridEnv, make_hard_maze, make_simple_maze
-from prompts import build_prompt, format_local_grid, format_observation
+from agents.observation import Observation
+from agents.llm_agent import LLMAgent, OllamaProvider
+from core.env_grid import GridEnv
+from core.mazes import make_hard_maze, make_simple_maze
+from prompts.prompts import build_prompt, format_local_grid, format_observation
 
 
 Coord = Tuple[int, int]
@@ -35,6 +41,7 @@ class ViewerState:
 
 class TkViewer:
     def __init__(self) -> None:
+        # Main UI entry point.
         self.root = tk.Tk()
         self.root.title("LLM Grid Viewer")
 
@@ -55,6 +62,7 @@ class TkViewer:
         self.root.after(50, self.poll_queue)
 
     def init_env(self) -> None:
+        # Build environment based on current maze choice.
         if self.maze_name.get() == "hard":
             width, height, walls, start, goal = make_hard_maze()
         else:
@@ -67,6 +75,7 @@ class TkViewer:
         self.env.reset()
 
     def init_agent(self) -> None:
+        # Rebuild LLM client when model/base URL changes.
         provider = OllamaProvider(
             self.base_url.get(),
             self.model_name.get(),
@@ -76,6 +85,7 @@ class TkViewer:
         self.agent = LLMAgent(provider)
 
     def build_ui(self) -> None:
+        # Layout: top controls, grid canvas, and scrollable text panel.
         top = ttk.Frame(self.root)
         top.pack(fill="x", padx=8, pady=4)
 
@@ -129,6 +139,7 @@ class TkViewer:
         self.status.pack(fill="x", padx=8, pady=4)
 
     def refresh_models(self) -> None:
+        # Query Ollama for available models and refresh dropdown.
         try:
             req = urllib.request.Request(
                 url=f"{self.base_url.get()}/api/tags",
@@ -158,6 +169,7 @@ class TkViewer:
         self.state.local_grid = not self.state.local_grid
 
     def reset(self) -> None:
+        # Reset agent state + UI.
         self.running = False
         self.env.reset()
         self.state.step = 0
@@ -169,12 +181,14 @@ class TkViewer:
         self.draw()
 
     def step_once(self) -> None:
+        # Run one step in a background thread.
         if self.step_in_progress:
             return
         self.step_in_progress = True
         threading.Thread(target=self._step_worker, daemon=True).start()
 
     def _step_worker(self) -> None:
+        # Single LLM step: build prompt -> query -> act -> update state.
         open_map = self.env.neighbors_open(self.env.pos)
         obs = Observation(
             pos=self.env.pos,
@@ -215,9 +229,13 @@ class TkViewer:
         self.state.last_raw = action_response.raw
         self.state.last_parsed = action_response.parsed
 
+        if result.pos_after == self.env.goal:
+            self.running = False
+
         self.task_queue.put((result.valid_move, result.pos_after))
 
     def poll_queue(self) -> None:
+        # UI loop: pull completed steps and update UI.
         try:
             valid_move, _ = self.task_queue.get_nowait()
             self.step_in_progress = False
@@ -230,9 +248,11 @@ class TkViewer:
         self.root.after(50, self.poll_queue)
 
     def toggle_run(self) -> None:
+        # Start/stop continuous stepping.
         self.running = not self.running
 
     def draw(self) -> None:
+        # Redraw grid and text panel.
         self.canvas.delete("all")
         cell = 40
         for y in range(self.height):

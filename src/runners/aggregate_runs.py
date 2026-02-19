@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+import os
+import sys
+
+# Allow running as a script from repo root.
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 import csv
 import glob
 import json
-import os
 from collections import defaultdict
 from typing import Dict, List, Tuple
 

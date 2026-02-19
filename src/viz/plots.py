@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from typing import Dict, Iterable, List, Tuple
+from typing import Dict, Iterable, List
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-
-Coord = Tuple[int, int]
+from core.types import Coord
 
 
 def _grid_to_image(width: int, height: int, walls: Iterable[Coord]) -> np.ndarray:

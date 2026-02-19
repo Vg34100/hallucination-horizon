@@ -2,18 +2,9 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass
-from typing import Dict, Iterable, List, Set, Tuple
+from typing import Dict, Iterable, List, Set
 
-
-Coord = Tuple[int, int]
-
-
-ACTION_DELTAS = {
-    "N": (0, -1),
-    "S": (0, 1),
-    "E": (1, 0),
-    "W": (-1, 0),
-}
+from core.types import ACTION_DELTAS, Coord
 
 
 @dataclass
@@ -27,6 +18,7 @@ class StepResult:
 
 
 class GridEnv:
+    # Simple gridworld: walls are blocked cells, agent has N/S/E/W actions.
     def __init__(
         self,
         width: int,
@@ -59,6 +51,7 @@ class GridEnv:
         return pos in self.walls
 
     def neighbors_open(self, pos: Coord) -> Dict[str, bool]:
+        # Returns which of N/S/E/W are open from current position.
         open_map: Dict[str, bool] = {}
         for action, (dx, dy) in ACTION_DELTAS.items():
             nx, ny = pos[0] + dx, pos[1] + dy
@@ -99,6 +92,7 @@ class GridEnv:
         )
 
     def flip_wall(self) -> Coord | None:
+        # Toggle one candidate wall cell on/off (for dynamic environments).
         if not self.flip_candidates:
             return None
         cell = random.choice(self.flip_candidates)
@@ -107,39 +101,3 @@ class GridEnv:
         else:
             self.walls.add(cell)
         return cell
-
-
-def make_simple_maze() -> Tuple[int, int, List[Coord], Coord, Coord]:
-    width, height = 7, 7
-    walls = {
-        (1, 1), (2, 1), (3, 1), (5, 1),
-        (1, 2), (5, 2),
-        (1, 3), (3, 3), (4, 3), (5, 3),
-        (1, 4),
-        (3, 5), (4, 5), (5, 5),
-    }
-    start = (0, 0)
-    goal = (6, 6)
-    return width, height, list(walls), start, goal
-
-
-def make_hard_maze() -> Tuple[int, int, List[Coord], Coord, Coord]:
-    width, height = 9, 9
-    start = (0, 0)
-    goal = (8, 8)
-
-    # Define a single winding corridor path (no trivial S->E loop).
-    path = [
-        (0, 0), (0, 1), (0, 2), (1, 2), (2, 2), (2, 1), (2, 0),
-        (3, 0), (4, 0), (4, 1), (4, 2), (4, 3), (3, 3), (2, 3),
-        (2, 4), (2, 5), (3, 5), (4, 5), (5, 5), (6, 5),
-        (6, 4), (6, 3), (7, 3), (8, 3), (8, 4), (8, 5),
-        (8, 6), (7, 6), (6, 6), (6, 7), (6, 8), (7, 8), (8, 8),
-    ]
-    open_set = set(path)
-    walls = []
-    for y in range(height):
-        for x in range(width):
-            if (x, y) not in open_set:
-                walls.append((x, y))
-    return width, height, walls, start, goal

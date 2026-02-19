@@ -1,0 +1,15 @@
+{
+  "max_steps": 60,
+  "progress_every": 10,
+  "history_steps": 10,
+  "local_grid": true,
+  "local_grid_radius": 2,
+  "structured_output": false,
+  "dynamic_walls": false,
+  "flip_every": 0,
+  "llm_timeout": 60,
+  "llm_retries": 1,
+  "ollama_base_url": "http://100.121.2.67:11434",
+  "ollama_model": "llama3.2:3b",
+  "ollama_mode": "generate"
+}
