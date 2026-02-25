@@ -35,6 +35,7 @@ def main() -> None:
         row = {
             "run_id": os.path.basename(run_dir),
             "model": config.get("ollama_model", ""),
+            "maze": config.get("maze", ""),
             "history_steps": config.get("history_steps", 0),
             "local_grid": config.get("local_grid", False),
             "structured_output": config.get("structured_output", False),

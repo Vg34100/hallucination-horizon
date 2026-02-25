@@ -236,6 +236,7 @@ def main() -> None:
     base_run_id = datetime.now().strftime("run_%Y%m%d_%H%M%S")
 
     config = {
+        "maze": args.maze,
         "width": width,
         "height": height,
         "start": start,

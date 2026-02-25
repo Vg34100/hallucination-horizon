@@ -19,6 +19,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--runs", type=int, default=5)
     parser.add_argument("--seed", type=int, default=1)
     parser.add_argument("--max-steps", type=int, default=60)
+    parser.add_argument("--maze", type=str, default="simple", choices=["simple", "hard"])
     return parser.parse_args()
 
 
@@ -34,6 +35,8 @@ def main() -> None:
             "src/runners/run_experiment.py",
             "--max-steps",
             str(args.max_steps),
+            "--maze",
+            args.maze,
             "--runs",
             str(args.runs),
             "--seed",
