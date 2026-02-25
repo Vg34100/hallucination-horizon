@@ -1,6 +1,7 @@
 .venv
 .env
 docs/history
+docs/references
 .explore.py
 data/runs
 *.png
