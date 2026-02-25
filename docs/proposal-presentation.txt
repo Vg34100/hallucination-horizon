@@ -1,0 +1,225 @@
+LLMs perform well on static benchmarks but are rarely evaluated in step-by-step 
+interactive settings. 
+Mapping the 
+Hallucination Horizon 
+A visual diagnostic study of spatial failure modes in LLM agents 
+Core Question 
+What failure patterns emerge when an LLM acts as an agent in a dynamic environment? Problem 
+Approach 
+Use agent-based modeling and visualization to diagnose how failures occur , not just 
+whether the agent succeeds. 
+Pablo Rodriguez 
+Environment Design 
+Environment 
+● 2D grid with walls, a start position, and a goal. Optional dynamic walls. 
+● The agent can move North, South, East, or West. 
+● Invalid moves (into walls or outside the grid) are blocked. 
+Agents 
+● Some experiments include walls that change during an episode. 
+●  A * pathﬁnding as ground truth 
+●  Random and Greedy baselines 
+●  LLM agent receives text observations only 
+T ermination 
+●  Goal reached or maximum step limit 
+
+2) Reality Gap (State T racking Error) 
+● Agent attempts invalid actions 
+such as moving into walls or 
+outside the grid. 
+● Reﬂects a mismatch between 
+the agent’s internal belief (from 
+text) and the environment’s 
+actual constraints. 1) Loop Rate (Memory Failure) 
+● Agent repeatedly visits the 
+same positions or cycles 
+through actions. 
+● Indicates difficulty 
+maintaining or using past 
+state information. Diagnostic Framework 
+Failure is not binary. 
+Three diagnostic mechanisms: 
+3) Goal Drift (Optimization Failure) 
+● Agent’s distance to the goal 
+increases or stagnates 
+compared to the optimal A * 
+path. 
+● Shows that even valid actions 
+can lead to inefficient or 
+degrading behavior over time. 
+Key idea 
+ These failure modes reveal how  and where  LLM agents break down, which is not visible from success/failure metrics alone. 
+ These mechanisms may share underlying causes, such as limitations in numerical or stepwise reasoning. 
+Current Progress & Preliminary Findings 
+Implementation Status  
+● Grid environment + A * baseline implemented 
+● LLM agent integrated via Ollama  
+● Step-level logging + diagnostic metrics working  
+● Batch experiments across models and conditions  
+Preliminary Observations  
+● Best performance: llama3.2:3b with short history + local grid  
+● Invalid move rates remain high across models  
+● Longer history does not consistently improve performance  
+● Dynamic environments cause signiﬁcant degradation  
+T akeaway  
+● Failure patterns appear consistent and measurable across tested conditions 
+● Diagnostic framework reveals differences not visible from success rate alone 
+
+Contribution & Scope 
+Main contribution 
+ A controlled diagnostic framework for analyzing LLM agent failures in structured environments 
+V alue 
+● Makes failure mechanisms visible 
+● Supports controlled, reproducible study 
+Scope 
+● Findings are limited to grid-based environments 
+● Does not claim generalization to open-world tasks 
+—THANK YOU— 
+prodriguezqu@ucdavis.edu 
+This project studies how Large Language Models behave when they are placed in an 
+interactive environment and asked to act step-by-step, rather than answer a single static 
+question. Instead of only measuring success or failure, the goal is to diagnose how  and 
+where  failures occur using visualization. Mapping the 
+Hallucination Horizon 
+A visual diagnostic study of spatial failure modes in LLM agents 
+Why this matters 
+  LLMs are increasingly used in settings that involve planning, navigation, or sequential 
+decision making. Understanding their failure patterns is important before trusting them in 
+real systems. High-level idea 
+Research Problem 
+Background 
+ LLMs perform well on static text benchmarks, including spatial reasoning questions like “what is left of what.” However , 
+these benchmarks do not test whether models can maintain a consistent internal state over time while interacting with an 
+environment. 
+Core problem 
+ Most existing evaluations focus on ﬁnal success rates. 
+ This hides important questions: 
+● Does the model lose track of where it is? 
+● Does it repeat the same actions? 
+● Does performance degrade as interaction continues? 
+Research question 
+ What speciﬁc spatial failure modes emerge 
+ when an LLM is used as an agent in a dynamic environment? 
+Computational Social Science Framing 
+Why this is computational social science 
+ This project treats the LLM as an artiﬁcial agent whose behavior emerges from interaction with an environment. This is 
+directly aligned with agent-based modeling, where simple rules can produce complex behavior . 
+Methods from the course used 
+● Agent-Based Modeling (ABM):  An agent interacts with a grid environment step-by-step. 
+● NLP / Machine Learning:  A language model generates actions from text observations. 
+● Visualization:  Spatial plots and heatmaps are used to analyze emergent behavior . 
+Perspective 
+ Rather than asking “is the model correct,” the project asks “what kind of behavior does this system produce under 
+constraints?” 
+
+Environment Design 
+Grid-world environment 
+● 2D grid with walls, a start position, and a goal. 
+● The agent can move North, South, East, or West. 
+● Invalid moves (into walls or outside the grid) are blocked. 
+Dynamic condition 
+● Some experiments include walls that change during an episode. 
+● This tests whether the agent can update its beliefs when the 
+environment changes. 
+Why this setup 
+● Simple enough to understand clearly. 
+● Complex enough to produce failure patterns over time. 
+● Easy to visualize and log step-by-step behavior . 
+
+Agents Compared 
+Control agent 
+● A * pathﬁnding algorithm. 
+● Deﬁnes the optimal path and expected behavior . 
+● Serves as ground truth. 
+Baseline agents 
+● Random agent. 
+● Greedy agent that moves closer to the goal when possible. 
+LLM agent 
+● Receives a text description of its position and surroundings at each step. 
+● Outputs a movement action as text. 
+● Has no direct access to the grid or map. 
+This comparison allows failures to be clearly attributed to the LLM decision process. 
+Core Contribution 
+Main contribution 
+ Instead of focusing only on whether the agent reaches the goal, this project proposes a diagnostic framework for 
+analyzing failures in controlled grid environments that classiﬁes how  failures occur during interaction. 
+Key idea 
+ Failure is not binary. Different errors reﬂect different limitations: 
+● Memory issues 
+● State tracking issues 
+● Optimization issues 
+Outcome 
+ A set of metrics and visualizations that make these failure modes visible and measurable. 
+2) Reality Gap (State T racking Error) 
+● Agent attempts invalid actions 
+such as moving into walls or 
+outside the grid. 
+● Reﬂects a mismatch between 
+the agent’s internal belief (from 
+text) and the environment’s 
+actual constraints. 
+● Visualized using heatmaps of 
+invalid move attempts. 1) Loop Rate (Memory Failure) 
+● Agent repeatedly visits the 
+same positions or cycles 
+through actions. 
+● Indicates difficulty 
+maintaining or using past 
+state information. 
+● Visualized using 
+visit-frequency heatmaps 
+and trajectory loops. Diagnosing Spatial Failure Modes 
+Motivation 
+ Most prior work on LLM agents evaluates performance using task success or completion rates. While useful, these metrics do not 
+explain why  agents fail or how errors emerge during interaction. This project focuses on diagnosing failure mechanisms rather than 
+only measuring outcomes. 
+3) Goal Drift (Optimization Failure) 
+● Agent’s distance to the goal 
+increases or stagnates 
+compared to the optimal A * 
+path. 
+● Shows that even valid actions 
+can lead to inefficient or 
+degrading behavior over time. 
+● Visualized using 
+distance-to-goal curves and 
+path overlays. 
+Key idea 
+ These failure modes reveal how  and where  LLM agents break down, which is not visible from success/failure metrics alone. 
+ These mechanisms may share underlying causes, such as limitations in numerical or stepwise reasoning. 
+Pilot Study Plan 
+Experimental setup 
+● Multiple models tested under the same environment (local LLMs via Ollama including llama3.2:3b and qwen3:4b) 
+● Multiple random seeds per condition 
+● Conditions vary history length and environment dynamics 
+a. Agents receive local grid text + short history buffer 
+b. Episodes terminate on goal or maximum step limit 
+● Invalid moves are blocked but logged 
+Outputs 
+● Step-by-step logs 
+● Aggregate failure rates 
+● Visual diagnostics 
+Why this is a pilot study 
+ The goal is not to claim ﬁnal results, but to test whether this diagnostic approach reveals meaningful patterns that can guide future 
+work. 
+
+Current Progress & Preliminary Findings 
+Implementation Status  
+● Grid environment + A * baseline implemented 
+● LLM agent integrated via Ollama  
+● Step-level logging + diagnostic metrics working  
+● Batch experiments across models and conditions  
+Preliminary Observations  
+● Best performance: llama3.2:3b with short history + local grid  
+● Invalid move rates remain high across models  
+● Longer history does not consistently improve performance  
+● Dynamic environments cause signiﬁcant degradation  
+T akeaway  
+● Failure patterns appear consistent and measurable across tested conditions 
+● Diagnostic framework reveals differences not visible from success rate alone 
+
+Related Work 
+Related Work (Selected) 
+● Shridhar et al., ALFWorld, EMNLP 2021 
+● Y ao et al., ReAct, ICLR 2023 
+● Liu et al., AgentBench, 2023 
+● Bender et al., Stochastic Parrots, F AccT 2021 

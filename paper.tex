@@ -1,0 +1,207 @@
+\documentclass[conference]{IEEEtran}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{placeins}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\title{Mapping the Hallucination Horizon: Visual Diagnostics of LLM Spatial Failure Modes}
+\author{\IEEEauthorblockN{Pablo Rodriguez}
+\IEEEauthorblockA{Graduate Group in Computer Science\\
+University of California, Davis\\
+prodriguezqu@ucdavis.edu}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Large language models (LLMs) often perform well on static spatial reasoning benchmarks, yet their step-by-step behavior in interactive environments is less understood. I present a diagnostic framework using a gridworld agent-based model (ABM) to measure and visualize three spatial failure modes: loop rate (memory failure), reality gap (invalid moves and fallback actions), and goal drift (distance-to-goal dynamics relative to A*). I implement baselines (A*, random, greedy) and compare multiple local LLMs via Ollama. Results show that model choice and observation design (history length and local grid) strongly affect success, but even the best models remain unstable with high invalid-move rates and frequent reliance on fallbacks. A dynamic-wall stress test sharply degrades performance. The contribution is a visual diagnostic toolkit that reveals how and where LLM agents fail, beyond binary success rates.
+\end{abstract}
+
+\section{Introduction}
+LLMs are increasingly used as controllers in interactive systems, yet they are typically evaluated on static question answering tasks. For spatial reasoning, this creates a gap between textual competence and embodied behavior. If an LLM is asked to navigate a space step by step, does it maintain a coherent internal state or simply produce plausible directions? This project addresses that gap by building a gridworld ABM that allows controlled, repeatable tests of spatial behavior and failure.
+
+The core contribution is diagnostic rather than benchmark-oriented: I track specific failure modes (looping, invalid moves, and goal drift) and visualize them with trajectories, heatmaps, and distance curves. This complements binary success metrics and aligns with the CSS principle of using simulation to explain how failures emerge.
+
+\section{Related Work}
+Interactive benchmarks such as ALFWorld evaluate agents in embodied tasks and highlight the importance of grounded action planning \cite{alfworld}. ReAct shows that interleaving reasoning and acting improves interactive performance \cite{react}. AgentBench provides a broad evaluation of LLMs as agents and reports large gaps between open-source and commercial models \cite{agentbench}. Critical analyses such as Stochastic Parrots caution that coherent outputs do not guarantee grounded understanding \cite{stochasticparrots}. BabyAI studies grounded language learning in controlled grid-like environments and motivates diagnostic evaluation of behavior \cite{babyai}. A quantitative study on repetitive deterministic prediction tasks shows that LLMs can struggle to sustain focused behavior across steps \cite{quantstudy}.
+
+\section{Methods}
+\subsection{Environment}
+I use a 2D gridworld with walls, a fixed start, and a goal. The agent can move one cell in N/S/E/W per step. Invalid moves (walls or out-of-bounds) are blocked. I implement a simple maze and a harder maze with a winding corridor. For the hard maze, runs are capped at 80 steps; simple mazes use 60 steps. A dynamic-wall mode flips a wall every $k$ steps as a stress test.
+
+\subsection{Agents}
+Baselines: (1) A* (optimal), (2) Random, (3) Greedy (minimizes Manhattan distance).
+
+LLM agent: The LLM receives a text observation with position, goal, open neighbors, optional local grid, and optional history. Output is parsed for N/S/E/W; if unusable, a fallback random valid move is used and logged. The fallback rate measures format compliance and control reliability. Note that invalid-move rate is computed after fallback, so cases like qwen can show low invalid rate but high fallback rate.
+
+Models: \texttt{gpt-oss:20b}, \texttt{llama3.2:3b}, \texttt{phi3:mini}, and \texttt{qwen3:8b} (negative control due to format compliance issues).
+
+\subsection{Interactive Interface}
+A lightweight Tkinter viewer renders the grid, displays the live prompt and LLM output, and allows step-by-step or continuous execution with adjustable history and local-grid settings. This enables qualitative diagnostics by observing failure modes in real time.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\columnwidth]{data/figs/ui.png}
+\caption{Interactive viewer used for live diagnostics (prompt, raw output, and step-by-step control).}
+\label{fig:ui}
+\end{figure}
+
+\subsection{Prompting and Parsing}
+Observations include the agent position, goal location, open neighbors, optional history window, and an optional local grid (default radius 2). The prompt ends with a strict instruction to return a single action from \{N,S,E,W\}. Raw model output is parsed by extracting the final direction token; if none is found, a fallback random valid move is used and logged. This makes format compliance observable without halting the episode.
+
+\subsection{Failure Metrics}
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Loop rate}: repeated visits to the same cell (memory failure).
+  \item \textbf{Reality gap}: invalid moves and fallback rate (state-tracking failure).
+  \item \textbf{Goal drift}: distance-to-goal curve compared to A* (optimization failure).
+\end{enumerate}
+\subsection{Metric Definitions}
+Loop rate is computed as the fraction of steps in which the agent revisits a previously visited cell. Invalid-move rate is the fraction of steps where the chosen action would move into a wall or out of bounds; it is computed after fallback is applied. Fallback rate is the fraction of steps where the model fails to emit a valid direction token and a random valid move is substituted. Goal drift is tracked by the shortest-path distance to the goal (precomputed via A* on the static maze); the distance-to-goal curve is reported per step and compared qualitatively to the optimal path.
+\subsection{Experimental Design}
+Runs use fixed random seeds and are repeated across conditions; the full suite uses 10 seeds per condition unless otherwise noted. Conditions vary by model, history length (0, 5, 10, 20), and maze difficulty (simple vs hard). Each run logs step-level JSON, summary metrics, and plots (trajectory, heatmaps, distance curves). Aggregates are computed over all runs in a condition and reported as mean rates. Goal rate is measured per episode; other rates are per step. Confidence intervals are not reported in this pilot; results should be read as descriptive.
+
+\subsection{Course Alignment}
+This project directly uses course methods. The gridworld is an agent-based model (ABM) with explicit micro-level rules and emergent failure patterns. The LLM agent is an NLP/ML component whose outputs are analyzed for compliance and error structure. The diagnostic framework maps ABM behavior to measurable failure metrics (loop rate, reality gap, goal drift), consistent with the course focus on computational modeling and empirical evaluation.
+
+\section{Results}
+\subsection{Model Comparison}
+Table \ref{tab:model-summary} summarizes overall performance across conditions. \texttt{gpt-oss:20b} achieves the highest overall goal rate, but still exhibits high invalid-move and fallback rates, indicating that apparent success often requires correction. \texttt{llama3.2:3b} is competitive but unstable, with higher fallback usage than goal rate would suggest. \texttt{phi3:mini} underperforms across metrics, and \texttt{qwen3:8b} fails to comply with output constraints, reflected in high fallback usage.
+
+\begin{table}[!htbp]
+\centering
+\caption{Overall summary by model (all conditions pooled).}
+\label{tab:model-summary}
+\begin{tabular}{lccc}
+\toprule
+Model & Goal rate & Invalid rate & Fallback rate \\
+\midrule
+qwen3:8b & 0.00 & 0.00 & 0.50 \\
+phi3:mini & 0.08 & 0.27 & 0.35 \\
+llama3.2:3b & 0.21 & 0.29 & 0.52 \\
+gpt-oss:20b & 0.41 & 0.49 & 0.27 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\columnwidth]{data/plot_goal_rate_by_model.png}
+\caption{Goal rate by model (all conditions pooled).}
+\label{fig:goalrate-model}
+\end{figure}
+
+\subsection{History Length \& Difficulty}
+Figure \ref{fig:goalrate-history} shows that performance does not monotonically improve with more history. For example, \texttt{llama3.2:3b} peaks around history 5 in simple mazes, while history 20 often reduces goal rate. This suggests that longer context can introduce noise rather than improve state tracking, especially for smaller models with limited long-horizon consistency.
+Figure \ref{fig:goalrate-maze} compares goal rates in simple vs hard mazes (hard runs capped at 80 steps). All models degrade on hard mazes, highlighting difficulty sensitivity independent of step budget. This supports the idea that interactive spatial reasoning is brittle under increased path complexity. Table \ref{tab:maze-summary} shows goal rates by model and difficulty.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\columnwidth]{data/plot_goal_rate_by_history.png}
+\caption{Goal rate vs history (local grid on).}
+\label{fig:goalrate-history}
+\end{figure}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\columnwidth]{data/plot_goal_rate_by_maze.png}
+\caption{Goal rate by model and maze difficulty.}
+\label{fig:goalrate-maze}
+\end{figure}
+
+\begin{table}[!htbp]
+\centering
+\caption{Goal rate by model and maze difficulty.}
+\label{tab:maze-summary}
+\begin{tabular}{lcc}
+\toprule
+Model & Simple maze & Hard maze \\
+\midrule
+gpt-oss:20b & 0.68 & 0.18 \\
+llama3.2:3b & 0.29 & 0.08 \\
+phi3:mini & 0.15 & 0.02 \\
+qwen3:8b & 0.00 & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Failure Diagnostics}
+Fallback and invalid-move rates quantify compliance and state-tracking failure. Figure \ref{fig:fallback} shows how often the model fails to emit a valid direction token and must be corrected by a fallback move. This matters because high goal rates can mask low control reliability: if a model needs frequent correction, it is not truly acting autonomously.
+Invalid moves are a more direct reality-gap signal. Even after parsing and fallback, agents often attempt moves that collide with walls or go out of bounds. Figure \ref{fig:invalid} shows that this behavior persists across models, indicating that state tracking breaks down during multi-step interaction.
+
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\columnwidth]{data/plot_fallback_rate_by_model.png}
+\caption{Fallback rate by model (format compliance).}
+\label{fig:fallback}
+\end{figure}
+
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\columnwidth]{data/plot_invalid_rate_by_model.png}
+\caption{Invalid-move rate by model.}
+\label{fig:invalid}
+\end{figure}
+Loop rate captures a different failure: repetitive cycles that indicate memory limitations or short-horizon planning. Figure \ref{fig:loop} shows that looping appears even when invalid moves are not extreme, meaning that agents can be valid but still inefficient or stuck.
+Representative visual diagnostics clarify where failures occur. Figure \ref{fig:representative} overlays the LLM path on the maze and highlights invalid-move hotspots. The distance-to-goal curve in Figure \ref{fig:distcurve} shows whether the agent is consistently progressing or drifting, even when actions are valid.
+
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\columnwidth]{data/plot_loop_rate_by_model.png}
+\caption{Loop rate by model.}
+\label{fig:loop}
+\end{figure}
+
+
+\begin{figure}[!htbp]
+\centering
+\begin{subfigure}{0.47\columnwidth}
+  \includegraphics[width=\linewidth]{data/figs/fig_traj.png}
+  \caption{Trajectory}
+\end{subfigure}
+\begin{subfigure}{0.47\columnwidth}
+  \includegraphics[width=\linewidth]{data/figs/fig_invalid_heat.png}
+  \caption{Invalid heatmap}
+\end{subfigure}
+\caption{Representative diagnostic visuals (gpt-oss:20b).}
+\label{fig:representative}
+\end{figure}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.8\columnwidth]{data/figs/fig_dist_curve.png}
+\caption{Distance-to-goal curve (same run as Figure \ref{fig:representative}).}
+\label{fig:distcurve}
+\end{figure}
+\section{Discussion}
+The results show that LLM spatial behavior is fragile and sensitive to observation design. Even the highest-performing model still exhibits high invalid-move and fallback rates, indicating limited compliance with strict action control. Longer history does not reliably help and can degrade performance. Dynamic environments (wall flips) reveal a sharp drop in reliability. More advanced baselines such as RL-trained agents, selective memory controllers, and ReAct-style prompting were considered but are out of scope for this course-scale study; these are natural next steps.
+The diagnostic approach is the primary contribution: failure modes are visible in trajectories, heatmaps, and distance curves in ways a binary success rate cannot capture. This aligns with concerns in the literature that coherent outputs do not guarantee grounded understanding \cite{stochasticparrots}. In practice, fallback and invalid rates act as a reliability signal: even when goal rates are reasonable, control compliance can be low.
+
+\section{Limitations}
+This is a pilot study with small local models and a single gridworld family. The prompts do not include explicit memory or planning modules, and no fine-tuning or RL was used. Results should be interpreted as diagnostic rather than definitive.
+
+\section{Conclusion}
+LLM agents can sometimes navigate gridworlds, but performance is unstable and failure modes are structured. A diagnostic framework that logs loop rate, reality gap, and goal drift provides a clearer picture of spatial reliability and exposes failure regions that success rates alone obscure. The results suggest that observation design and compliance constraints are as important as model size, and that dynamic environments remain a major weakness. Future work should test stronger memory mechanisms, richer environments, and learning-based agents that can explicitly model state.
+
+
+
+
+
+\begin{thebibliography}{99}
+\bibitem{alfworld} M. Shridhar, X. Yuan, M.-A. Côté, Y. Bisk, A. Trischler, and M. Hausknecht, ``ALFWorld: Aligning Text and Embodied Environments for Interactive Learning,'' ICLR, 2021.
+\bibitem{react} S. Yao, J. Zhao, D. Yu, N. Du, I. Shafran, K. Narasimhan, and Y. Cao, ``ReAct: Synergizing Reasoning and Acting in Language Models,'' ICLR, 2023.
+\bibitem{agentbench} X. Liu et al., ``AgentBench: Evaluating LLMs as Agents,'' ICLR, 2024.
+\bibitem{stochasticparrots} E. M. Bender, T. Gebru, A. McMillan-Major, and S. Shmitchell, ``On the Dangers of Stochastic Parrots: Can Language Models Be Too Big?,'' FAccT, 2021.
+\bibitem{babyai} M. Chevalier-Boisvert et al., ``BabyAI: A Platform to Study the Sample Efficiency of Grounded Language Learning,'' ICLR, 2019.
+\bibitem{quantstudy} W. Hou et al., ``How Focused Are LLMs? A Quantitative Study via Repetitive Deterministic Prediction Tasks,'' 2023.
+\end{thebibliography}
+
+\end{document}
