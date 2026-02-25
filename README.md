@@ -47,3 +47,5 @@ src/
   runners/       # run scripts
   main.py        # entry point
 ```
+
+> Paper title: “Mapping the Hallucination Horizon: Visual Diagnostics of LLM Spatial Failure Modes”
