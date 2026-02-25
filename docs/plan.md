@@ -57,3 +57,6 @@ Deliverable:
 
 Deliverable:
 - Presentation + final paper draft.
+
+## Notes
+- `src/viz/paper/` contains plots and selection helpers for paper figures.

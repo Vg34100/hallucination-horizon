@@ -15,7 +15,7 @@ def parse_args() -> argparse.Namespace:
         "--mode",
         type=str,
         default="experiment",
-        choices=["experiment", "batch", "sweep", "aggregate", "viewer", "viewer-mpl"],
+        choices=["experiment", "batch", "sweep", "aggregate", "viewer", "viewer-mpl", "full-suite", "plot", "pick"],
     )
     parser.add_argument("args", nargs=argparse.REMAINDER)
     return parser.parse_args()
@@ -40,6 +40,12 @@ def main() -> None:
         run_module("runners.run_history_sweep", args.args)
     elif args.mode == "aggregate":
         run_module("runners.aggregate_runs", args.args)
+    elif args.mode == "full-suite":
+        run_module("runners.run_full_suite", args.args)
+    elif args.mode == "plot":
+        run_module("viz.paper.plot_results", args.args)
+    elif args.mode == "pick":
+        run_module("viz.paper.pick_representative", args.args)
     elif args.mode == "viewer":
         run_module("viz.tk_viewer", args.args)
     elif args.mode == "viewer-mpl":
