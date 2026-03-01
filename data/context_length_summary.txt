@@ -1,0 +1,5 @@
+Context length summary (by history_steps):
+- history=0: chars_max=11147, words_max=2213, chars_mean=4558, words_mean=935
+- history=5: chars_max=1218, words_max=230, chars_mean=1069, words_mean=207
+- history=10: chars_max=2138, words_max=410, chars_mean=1680, words_mean=332
+- history=20: chars_max=3978, words_max=770, chars_mean=2602, words_mean=525
