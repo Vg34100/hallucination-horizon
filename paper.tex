@@ -25,7 +25,6 @@ Large language models (LLMs) often perform well on static spatial reasoning benc
 
 \section{Introduction}
 LLMs are increasingly used as controllers in interactive systems, yet they are typically evaluated on static question answering tasks. For spatial reasoning, this creates a gap between textual competence and embodied behavior. If an LLM is asked to navigate a space step by step, does it maintain a coherent internal state or simply produce plausible directions? This project addresses that gap by building a gridworld ABM that allows controlled, repeatable tests of spatial behavior and failure.
-
 The core contribution is diagnostic rather than benchmark-oriented: I track specific failure modes (looping, invalid moves, and goal drift) and visualize them with trajectories, heatmaps, and distance curves. This complements binary success metrics and aligns with the CSS principle of using simulation to explain how failures emerge.
 
 \section{Related Work}
@@ -42,15 +41,16 @@ LLM agent: The LLM receives a text observation with position, goal, open neighbo
 
 Models: \texttt{gpt-oss:20b}, \texttt{llama3.2:3b}, \texttt{phi3:mini}, and \texttt{qwen3:8b} (negative control due to format compliance issues).
 
-\subsection{Interactive Interface}
-A lightweight Tkinter viewer renders the grid, displays the live prompt and LLM output, and allows step-by-step or continuous execution with adjustable history and local-grid settings. This enables qualitative diagnostics by observing failure modes in real time.
-
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=\columnwidth]{data/figs/ui.png}
-\caption{Interactive viewer used for live diagnostics (prompt, raw output, and step-by-step control).}
+\caption{Interactive viewer used for live diagnostics.}
 \label{fig:ui}
 \end{figure}
+\subsection{Interactive Interface}
+A lightweight Tkinter viewer renders the grid, displays the live prompt and LLM output, and allows step-by-step or continuous execution with adjustable history and local-grid settings. This enables qualitative diagnostics by observing failure modes in real time.
+
+
 
 \subsection{Prompting and Parsing}
 Observations include the agent position, goal location, open neighbors, optional history window, and an optional local grid (default radius 2). The prompt ends with a strict instruction to return a single action from \{N,S,E,W\}. Raw model output is parsed by extracting the final direction token; if none is found, a fallback random valid move is used and logged. This makes format compliance observable without halting the episode.
@@ -61,9 +61,9 @@ Observations include the agent position, goal location, open neighbors, optional
   \item \textbf{Reality gap}: invalid moves and fallback rate (state-tracking failure).
   \item \textbf{Goal drift}: distance-to-goal curve compared to A* (optimization failure).
 \end{enumerate}
-\subsection{Metric Definitions}
+
 Loop rate is computed as the fraction of steps in which the agent revisits a previously visited cell. Invalid-move rate is the fraction of steps where the chosen action would move into a wall or out of bounds; it is computed after fallback is applied. Fallback rate is the fraction of steps where the model fails to emit a valid direction token and a random valid move is substituted. Goal drift is tracked by the shortest-path distance to the goal (precomputed via A* on the static maze); the distance-to-goal curve is reported per step and compared qualitatively to the optimal path.
-\subsection{Experimental Design}
+
 Runs use fixed random seeds and are repeated across conditions; the full suite uses 10 seeds per condition unless otherwise noted. Conditions vary by model, history length (0, 5, 10, 20), and maze difficulty (simple vs hard). Each run logs step-level JSON, summary metrics, and plots (trajectory, heatmaps, distance curves). Aggregates are computed over all runs in a condition and reported as mean rates. Goal rate is measured per episode; other rates are per step. Confidence intervals are not reported in this pilot; results should be read as descriptive.
 
 \subsection{Course Alignment}
@@ -133,6 +133,7 @@ qwen3:8b & 0.00 & -- \\
 \subsection{Failure Diagnostics}
 Fallback and invalid-move rates quantify compliance and state-tracking failure. Figure \ref{fig:fallback} shows how often the model fails to emit a valid direction token and must be corrected by a fallback move. This matters because high goal rates can mask low control reliability: if a model needs frequent correction, it is not truly acting autonomously.
 Invalid moves are a more direct reality-gap signal. Even after parsing and fallback, agents often attempt moves that collide with walls or go out of bounds. Figure \ref{fig:invalid} shows that this behavior persists across models, indicating that state tracking breaks down during multi-step interaction.
+Co-occurrence analysis of per-episode rates shows that fallback and invalid rates are strongly negatively correlated, suggesting that fallback suppresses invalid-move counts under the current logging definition. Fallback and loop rates co-occur moderately, while invalid and loop rates show a negative relationship, implying that episodes with frequent invalid attempts are not necessarily the same episodes that exhibit high looping.
 
 
 \begin{figure}[!htbp]

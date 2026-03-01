@@ -15,7 +15,18 @@ def parse_args() -> argparse.Namespace:
         "--mode",
         type=str,
         default="experiment",
-        choices=["experiment", "batch", "sweep", "aggregate", "viewer", "viewer-mpl", "full-suite", "plot", "pick"],
+        choices=[
+            "experiment",
+            "batch",
+            "sweep",
+            "aggregate",
+            "viewer",
+            "viewer-mpl",
+            "full-suite",
+            "plot",
+            "pick",
+            "cooccurrence",
+        ],
     )
     parser.add_argument("args", nargs=argparse.REMAINDER)
     return parser.parse_args()
@@ -46,6 +57,8 @@ def main() -> None:
         run_module("viz.paper.plot_results", args.args)
     elif args.mode == "pick":
         run_module("viz.paper.pick_representative", args.args)
+    elif args.mode == "cooccurrence":
+        run_module("viz.paper.cooccurrence", args.args)
     elif args.mode == "viewer":
         run_module("viz.tk_viewer", args.args)
     elif args.mode == "viewer-mpl":

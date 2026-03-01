@@ -30,6 +30,7 @@ python3 src/main.py --mode aggregate
 python3 src/main.py --mode experiment -- --history-steps 10 --local-grid
 python3 src/main.py --mode experiment -- --dynamic-walls --flip-every 5
 python3 src/main.py --mode experiment -- --maze hard
+python3 src/main.py --mode full-suite
 ```
 
 ## Notes

@@ -1,0 +1,6 @@
+episodes=317
+corr(fallback, invalid)=-0.808
+corr(fallback, loop)=0.547
+corr(invalid, loop)=-0.694
+threshold>=0.1: fallback+invalid=0.757, fallback+loop=0.628, invalid+loop=0.530, all_three=0.530
+threshold>=0.3: fallback+invalid=0.145, fallback+loop=0.000, invalid+loop=0.000, all_three=0.000
