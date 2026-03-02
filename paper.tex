@@ -69,7 +69,7 @@ Observations include the agent position, goal location, open neighbors, optional
 
 Loop rate is computed as the fraction of steps in which the agent revisits a previously visited cell. Invalid-move rate is the fraction of steps where the chosen action would move into a wall or out of bounds; it is computed after fallback is applied. Fallback rate is the fraction of steps where the model fails to emit a valid direction token and a random valid move is substituted. Goal drift is tracked by the shortest-path distance to the goal (precomputed via A* on the static maze); the distance-to-goal curve is reported per step and compared qualitatively to the optimal path.
 
-Runs use fixed random seeds and are repeated across conditions; the full suite uses 10 seeds per condition unless otherwise noted. Conditions vary by model, history length (0, 5, 10, 20), and maze difficulty (simple vs hard). Each run logs step-level JSON, summary metrics, and plots (trajectory, heatmaps, distance curves). Aggregates are computed over all runs in a condition and reported as mean rates. Goal rate is measured per episode; other rates are per step. Confidence intervals are not reported in this pilot; results should be read as descriptive.
+Runs use fixed random seeds and are repeated across conditions; the full suite uses 10 seeds per condition unless otherwise noted. Conditions vary by model, history length (0, 5, 10, 20), and maze difficulty (simple vs hard). Each run logs step-level JSON, summary metrics, and plots (trajectory, heatmaps, distance curves). Aggregates are computed over all runs in a condition and reported as mean rates. Goal rate is measured per episode; other rates are per step. I also report descriptive 95\% confidence intervals across runs (normal approximation) to indicate variability rather than formal statistical significance.
 
 \subsection{Course Alignment}
 This project directly uses course methods. The gridworld is an agent-based model (ABM) with explicit micro-level rules and emergent failure patterns. The LLM agent is an NLP/ML component whose outputs are analyzed for compliance and error structure. The diagnostic framework maps ABM behavior to measurable failure metrics (loop rate, reality gap, goal drift), consistent with the course focus on computational modeling and empirical evaluation.
@@ -94,6 +94,25 @@ gpt-oss:20b & 0.41 & 0.49 & 0.27 \\
 \bottomrule
 \end{tabular}
 \end{table}
+Descriptive 95\% confidence intervals across runs are shown in Table \ref{tab:ci-summary}. These are intended as variability indicators rather than formal statistical tests.
+
+\begin{table}[!htbp]
+\centering
+\caption{Descriptive 95\% CIs by model (mean \(\pm\) CI).}
+\label{tab:ci-summary}
+\begin{tabular}{lccc}
+\toprule
+Model & Goal rate & Invalid rate & Fallback rate \\
+\midrule
+gpt-oss:20b & \(0.407 \pm 0.101\) & \(0.489 \pm 0.028\) & \(0.271 \pm 0.014\) \\
+llama3.2:3b & \(0.208 \pm 0.070\) & \(0.294 \pm 0.051\) & \(0.523 \pm 0.056\) \\
+phi3:mini & \(0.077 \pm 0.055\) & \(0.272 \pm 0.019\) & \(0.353 \pm 0.019\) \\
+qwen3:8b & \(0.000 \pm 0.000\) & \(0.000 \pm 0.000\) & \(0.500 \pm 0.566\) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+These intervals clarify the trade-offs: \texttt{gpt-oss:20b} has the highest success but also high invalid moves, indicating that success often coexists with frequent missteps. \texttt{llama3.2:3b} shows lower success and the largest fallback rate, suggesting format compliance is a major bottleneck even when trajectories progress. \texttt{phi3:mini} is consistently low across metrics, and \texttt{qwen3:8b} is unstable with large fallback variability relative to its small sample size, reinforcing its role as a negative control.
 
 \begin{figure}[!htbp]
 \centering

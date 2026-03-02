@@ -27,6 +27,7 @@ def parse_args() -> argparse.Namespace:
             "pick",
             "cooccurrence",
             "context-length",
+            "stats",
         ],
     )
     parser.add_argument("args", nargs=argparse.REMAINDER)
@@ -62,6 +63,8 @@ def main() -> None:
         run_module("viz.paper.cooccurrence", args.args)
     elif args.mode == "context-length":
         run_module("viz.paper.context_length", args.args)
+    elif args.mode == "stats":
+        run_module("viz.paper.stats_summary", args.args)
     elif args.mode == "viewer":
         run_module("viz.tk_viewer", args.args)
     elif args.mode == "viewer-mpl":

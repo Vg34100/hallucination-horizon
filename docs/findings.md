@@ -42,3 +42,11 @@
     - avg_invalid_move_rate=0.384
     - avg_loop_rate=0.111
     - avg_fallback_rate=0.293
+
+- Descriptive stats (mean ± 95% CI) per model
+  - Purpose: add basic statistical rigor without rerunning experiments.
+  - Commit: `chore: add descriptive stats summary`
+  - Commands:
+    - `python3 src/main.py --mode stats`
+  - Outputs:
+    - `data/stats_summary.txt`

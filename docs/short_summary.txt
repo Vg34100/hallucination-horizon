@@ -1,0 +1,5 @@
+Short Summary
+
+This project builds a diagnostic framework for LLM spatial reasoning in an interactive gridworld. Instead of only reporting success rates, it logs and visualizes three failure modes—loop rate, reality gap (invalid moves and fallback actions), and goal drift—using trajectories, heatmaps, distance curves, and an interactive viewer. I compare multiple local LLMs against baselines (A*, greedy, random) and vary observation design (history length, local grid) and maze difficulty. Results show that model choice and prompt design strongly affect success, but even the best models remain unstable with high invalid and fallback rates, and performance drops sharply in harder mazes. The contribution is a lightweight diagnostic toolkit that reveals where and how LLM agents fail, supporting future work on more reliable embodied controllers.
+
+Adviser: none listed (course instructor only; no external DE-CSS adviser for this project).

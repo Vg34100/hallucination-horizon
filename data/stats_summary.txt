@@ -1,0 +1,29 @@
+Stats summary (per-run, descriptive):
+
+Model: gpt-oss:20b (n=91)
+goal_rate: mean=0.407, 95%CI=±0.101
+invalid_rate: mean=0.489, 95%CI=±0.028
+loop_rate: mean=0.093, 95%CI=±0.008
+fallback_rate: mean=0.271, 95%CI=±0.014
+min_distance: mean=4.033, 95%CI=±0.780
+
+Model: llama3.2:3b (n=130)
+goal_rate: mean=0.208, 95%CI=±0.070
+invalid_rate: mean=0.294, 95%CI=±0.051
+loop_rate: mean=0.111, 95%CI=±0.008
+fallback_rate: mean=0.523, 95%CI=±0.056
+min_distance: mean=5.223, 95%CI=±0.655
+
+Model: phi3:mini (n=91)
+goal_rate: mean=0.077, 95%CI=±0.055
+invalid_rate: mean=0.272, 95%CI=±0.019
+loop_rate: mean=0.130, 95%CI=±0.008
+fallback_rate: mean=0.353, 95%CI=±0.019
+min_distance: mean=5.571, 95%CI=±0.781
+
+Model: qwen3:8b (n=4)
+goal_rate: mean=0.000, 95%CI=±0.000
+invalid_rate: mean=0.000, 95%CI=±0.000
+loop_rate: mean=0.083, 95%CI=±0.058
+fallback_rate: mean=0.500, 95%CI=±0.566
+min_distance: mean=11.000, 95%CI=±0.000
