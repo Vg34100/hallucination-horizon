@@ -29,3 +29,16 @@
     - history=0: chars_max=11147, words_max=2213 (largest prompts observed)
     - history=20: chars_max=3978, words_max=770
     - All observed prompts are well below a 64k context window, so truncation is unlikely to explain failures.
+
+- Planning-prompt pilot (gpt-oss:20b, simple maze, history=10, local grid)
+  - Purpose: test whether a short explicit planning step changes loop/invalid behavior without re-running the full suite.
+  - Commit: `feat: add planning-prompt variant for LLM`
+  - Commands:
+    - `python3 src/main.py --mode experiment -- --maze simple --history-steps 10 --local-grid --plan-prompt --runs 5`
+  - Outputs:
+    - `data/runs/run_20260301_115608_1` through `_5`
+  - Findings (LLM only):
+    - goal_rate=0.80 (4/5)
+    - avg_invalid_move_rate=0.384
+    - avg_loop_rate=0.111
+    - avg_fallback_rate=0.293

@@ -113,6 +113,7 @@ class InteractiveViewer:
             obs_text,
             self.state.history[-self.state.history_steps :],
             local_grid,
+            plan_prompt=False,
         )
         action_response = self.agent.choose_action(obs, prompt)
         action = action_response.parsed

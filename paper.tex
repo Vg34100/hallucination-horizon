@@ -133,8 +133,28 @@ qwen3:8b & 0.00 & -- \\
 \subsection{Failure Diagnostics}
 Fallback and invalid-move rates quantify compliance and state-tracking failure. Figure \ref{fig:fallback} shows how often the model fails to emit a valid direction token and must be corrected by a fallback move. This matters because high goal rates can mask low control reliability: if a model needs frequent correction, it is not truly acting autonomously.
 Invalid moves are a more direct reality-gap signal. Even after parsing and fallback, agents often attempt moves that collide with walls or go out of bounds. Figure \ref{fig:invalid} shows that this behavior persists across models, indicating that state tracking breaks down during multi-step interaction.
-Co-occurrence analysis of per-episode rates shows that fallback and invalid rates are strongly negatively correlated, suggesting that fallback suppresses invalid-move counts under the current logging definition. Fallback and loop rates co-occur moderately, while invalid and loop rates show a negative relationship, implying that episodes with frequent invalid attempts are not necessarily the same episodes that exhibit high looping.
 
+In a small planning-prompt pilot (gpt-oss:20b, simple maze, history=10, local grid, 5 runs), goal rate improved to 0.80, but invalid and fallback rates remained high (avg invalid 0.38, fallback 0.29), as shown in Table \ref{tab:planning-pilot}, indicating that a brief planning instruction alone does not resolve state-tracking errors. In Figure \ref{fig:cooccurrence-scatter} the strong negative correlation suggests fallback suppresses invalid counts under the current logging definition.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\columnwidth]{data/plot_fallback_vs_invalid.png}
+\caption{Per-episode fallback vs invalid rates. }
+\label{fig:cooccurrence-scatter}
+\end{figure}
+
+\begin{table}[!htbp]
+\centering
+\caption{Planning-prompt pilot.}
+\label{tab:planning-pilot}
+\begin{tabular}{lcccc}
+\toprule
+Goal rate & Avg invalid & Avg loop & Avg fallback \\
+\midrule
+0.80 & 0.38 & 0.11 & 0.29 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \begin{figure}[!htbp]
 \centering
@@ -185,8 +205,6 @@ Representative visual diagnostics clarify where failures occur. Figure \ref{fig:
 \section{Discussion}
 The results show that LLM spatial behavior is fragile and sensitive to observation design. Even the highest-performing model still exhibits high invalid-move and fallback rates, indicating limited compliance with strict action control. Longer history does not reliably help and can degrade performance. Dynamic environments (wall flips) reveal a sharp drop in reliability. More advanced baselines such as RL-trained agents, selective memory controllers, and ReAct-style prompting were considered but are out of scope for this course-scale study; these are natural next steps.
 The diagnostic approach is the primary contribution: failure modes are visible in trajectories, heatmaps, and distance curves in ways a binary success rate cannot capture. This aligns with concerns in the literature that coherent outputs do not guarantee grounded understanding \cite{stochasticparrots}. In practice, fallback and invalid rates act as a reliability signal: even when goal rates are reasonable, control compliance can be low.
-This toolkit is intended for researchers and engineers building LLM-based controllers for robotics, embodied agents, and interactive planning systems where reliability and error localization matter more than static benchmark accuracy. The taxonomy also makes explicit that failure modes are analytically distinct but can share underlying causes (e.g., degraded working memory or inconsistent world modeling), which is why co-occurrence patterns are informative.
-Prompt-length checks show that even the longest history settings produce prompts well below a 64k context window (max observed \(\sim\)11k characters, \(\sim\)2.2k words), suggesting that truncation is not the main driver of failure in these experiments.
 
 \section{Limitations}
 This is a pilot study with small local models and a single gridworld family. The prompts do not include explicit memory or planning modules, and no fine-tuning or RL was used. Results should be interpreted as diagnostic rather than definitive.
@@ -194,9 +212,8 @@ This is a pilot study with small local models and a single gridworld family. The
 \section{Conclusion}
 LLM agents can sometimes navigate gridworlds, but performance is unstable and failure modes are structured. A diagnostic framework that logs loop rate, reality gap, and goal drift provides a clearer picture of spatial reliability and exposes failure regions that success rates alone obscure. The results suggest that observation design and compliance constraints are as important as model size, and that dynamic environments remain a major weakness. Future work should test stronger memory mechanisms, richer environments, and learning-based agents that can explicitly model state.
 
-
-
-
+\section{Future Work}
+Immediate next steps include adding a short planning-step prompt variant, expanding prompt diversity to reduce template overfitting, and running a small ablation that disables fallback to quantify how much success depends on correction. Larger extensions (out of scope here) include multi-objective or milestone navigation, dynamic replanning, learned memory controllers, RL-trained grounded agents, and more complex 3D environments. These directions would test whether the diagnostic metrics shrink under stronger policies and whether failure modes shift as environments become richer.
 
 \begin{thebibliography}{99}
 \bibitem{alfworld} M. Shridhar, X. Yuan, M.-A. Côté, Y. Bisk, A. Trischler, and M. Hausknecht, ``ALFWorld: Aligning Text and Embodied Environments for Interactive Learning,'' ICLR, 2021.

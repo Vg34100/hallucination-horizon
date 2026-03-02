@@ -53,6 +53,7 @@ def build_prompt(
     obs_text: str,
     history: List[str],
     local_grid: str | None,
+    plan_prompt: bool = False,
 ) -> str:
     parts: List[str] = []
     parts.append("You are navigating a grid maze to reach the goal.")
@@ -65,5 +66,7 @@ def build_prompt(
         parts.append(local_grid)
     parts.append("Current observation:")
     parts.append(obs_text)
+    if plan_prompt:
+        parts.append("Before choosing your move, state a brief 1-step plan.")
     parts.append("What is the best move toward the goal? Respond with one letter: N, S, E, or W.")
     return "\n".join(parts)

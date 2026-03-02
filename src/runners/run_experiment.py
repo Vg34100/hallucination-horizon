@@ -36,6 +36,7 @@ def run_agent(
     history_steps: int = 0,
     include_local_grid: bool = False,
     local_grid_radius: int = 2,
+    plan_prompt: bool = False,
     dynamic_walls: bool = False,
     flip_every: int = 0,
     progress_every: int = 10,
@@ -87,7 +88,12 @@ def run_agent(
                     env.height,
                     local_grid_radius,
                 )
-            prompt = build_prompt(obs_text, history[-history_steps:], local_grid)
+            prompt = build_prompt(
+                obs_text,
+                history[-history_steps:],
+                local_grid,
+                plan_prompt=plan_prompt,
+            )
             action_response = choose_action_fn(obs, prompt)
             action_raw = action_response
             action_parsed = action_response
@@ -213,6 +219,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--history-steps", type=int, default=0)
     parser.add_argument("--local-grid", action="store_true")
     parser.add_argument("--local-grid-radius", type=int, default=2)
+    parser.add_argument("--plan-prompt", action="store_true")
     parser.add_argument("--structured-output", action="store_true")
     parser.add_argument("--llm-timeout", type=int, default=60)
     parser.add_argument("--llm-retries", type=int, default=1)
@@ -247,6 +254,7 @@ def main() -> None:
         "history_steps": args.history_steps,
         "local_grid": args.local_grid,
         "local_grid_radius": args.local_grid_radius,
+        "plan_prompt": args.plan_prompt,
         "structured_output": args.structured_output,
         "llm_timeout": args.llm_timeout,
         "llm_retries": args.llm_retries,
@@ -313,6 +321,7 @@ def main() -> None:
                 history_steps=config["history_steps"],
                 include_local_grid=config["local_grid"],
                 local_grid_radius=config["local_grid_radius"],
+                plan_prompt=config["plan_prompt"],
                 dynamic_walls=config["dynamic_walls"],
                 flip_every=config["flip_every"],
                 progress_every=config["progress_every"],
